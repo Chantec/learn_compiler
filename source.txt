@@ -1,0 +1,16 @@
+var m, n, r, q;
+
+{ 计算m和n的最大公约数 }
+
+procedure gcd;
+    begin
+        while r#0  do 
+             begin
+                q := m / n;
+                r := m - q * n;
+                m := n;
+                n := r;
+             end
+   end;
+
+   /* * @Author: {author}  * @Date: {createTime}  */
