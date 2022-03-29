@@ -1,12 +1,12 @@
 /*
  * @Author: liangzichao
- * @Date: 2022-03-22 14:36:09
+ * @Date: 2022-03-26 19:18:33
  * @Last Modified by: liangzichao
- * @Last Modified time: 2022-03-22 14:42:57
  *
- * 这是最直接的版本，没有用到DFA
- * todo:error处理 标识符长度限制
+ * 没有用到DFA，后续会更改
+ * 错误处理还不完善
  */
+
 #include <cstdio>
 #include <cstring>
 #include <cctype>
@@ -15,41 +15,11 @@
 //单词种别
 enum symbol
 {
-    nul,
-    ident,
-    number,
-    plus,
-    minus,
-    times,
-    slash,
-    oddsym,
-    eql,
-    neq,
-    lss,
-    leq,
-    gtr,
-    geq,
-    lparen,
-    rparen,
-    comma,
-    semicolon,
-    period,
-    becomes,
-    beginsym,
-    endsym,
-    ifsym,
-    thensym,
-    whilesym,
-    writesym,
-    readsym,
-    dosym,
-    callsym,
-    constsym,
-    varsym,
-    procsym,
-    comment
+    nul,ident,number,plus,minus,times,slash,oddsym,eql,neq,lss,leq,gtr,geq,
+    lparen,rparen,comma,semicolon,period,becomes,beginsym,endsym,ifsym,thensym, whilesym,writesym,readsym,
+    dosym,callsym,constsym,varsym,procsym
 };
-// nul表示识别不了
+// nul表示识别不了的单词
 // becomes 赋值
 // comma 逗号 semicolon分号 period 句号
 
@@ -71,23 +41,26 @@ char id[ID_MAXLEN + 1]; //传递标识符单词自身的值 即名字
 int num;                //传递无符号整数单词的值
 
 const int WORD_CNT = 13;
+char *WORD[WORD_CNT] = {"const", "var", "procedure", "begin", "end", "odd", 
+                        "if", "then", "call", "while", "do", "read", "write"};
+int WSYM[WORD_CNT] = {constsym, varsym, procsym, beginsym, endsym, oddsym,
+                        ifsym, thensym, callsym, whilesym, dosym, readsym, writesym};
+
+
 const int SINGAL_CH_CNT = 11; //+ - * /  = # ( ) , . ;
-
-char *WORD[WORD_CNT] = {"const", "var", "procedure", "begin", "end", "odd", "if", "then", "call", "while", "do", "read", "write"};
-int WSYM[WORD_CNT] = {constsym, varsym, procsym, beginsym, endsym, oddsym, ifsym, thensym, callsym, whilesym, dosym, readsym, writesym};
-
 char SINGAL_CH[SINGAL_CH_CNT] = {'+', '-', '*', '/', '=', '#', '(', ')', ',', '.', ';'};
 int CSYM[SINGAL_CH_CNT] = {plus, minus, times, slash, eql, neq, lparen, rparen, comma, period, semicolon};
+
+
 // word symbol 单词（关键字）对应的种别
 
 void error(int i);
 
 //用来管理 每一行 因为要产生报错信息
 // 以下变量便于报错时知道是哪一行哪一列出错的
-// 在getch()中用的到
 int cc = 0;    // character count (当前已读的字符个数)
 int ll = 0;    // line length
-int lc = 1;    // line count
+int lc = 0;    // line count
 char line[80]; //输入缓冲
 
 char ch;
@@ -101,7 +74,7 @@ void getch()
         ll = cc = 0;
         if (feof(fp))
         {
-            ch=EOF;
+            ch = EOF;
             exit(0);
         }
         while (!feof(fp) && (ch = getc(fp)) != '\n')
@@ -114,7 +87,7 @@ void getch()
 
 int getSym() //每次得到一个符号 二元组
 {
-    if(ch==EOF)
+    if (ch == EOF)
         return 0;
     //忽略空格 回车 换行 tab
     while (ch == ' ' || ch == '\r' || ch == '\n' || ch == '\t')
@@ -166,7 +139,7 @@ int getSym() //每次得到一个符号 二元组
             num = num * 10 + ch - '0';
             getch();
         }
-        if(isalpha(ch))
+        if (isalpha(ch))
         {
             error(SHOULD_BE_NUM);
         }
@@ -219,13 +192,13 @@ int getSym() //每次得到一个符号 二元组
     }
     else if (ch == '{') //注释
     {
-        sym = comment;
+        //sym = comment;
         getch();
         while (ch != '}')
             getch();
         // ch现在就是}
         getch();
-        printf("(%d,{})\n", sym);
+        //printf("(%d,{})\n", sym);
     }
     else //单个字符的 + - * / = #
     {
@@ -268,29 +241,35 @@ int lexer(FILE *fp)
         ;
 }
 
-
 void error(int i)
 {
-    
-    for(int i=0;i<ll;++i) printf("%c",line[i]);//打印本行
-    printf("\n");
-    for(int i=0;i<cc-1;++i)//这个减2 liangtodo
-        printf(" ");//打印空格
-    printf("^\n");//打印指出错误的地方
+    printf("lexer error:\n");
+    printf("%d:",lc);
+    for (int i = 0; i < ll; ++i)
+        printf("%c", line[i]); //打印本行
+    printf("\n  ");
+    for (int i = 0; i < cc - 1; ++i) //这个减2 liangtodo
+        printf(" ");                 //打印空格
+    printf("^\n");                   //打印指出错误的地方
 
     switch (i)
     {
     case ID_LEN_TOO_MAX:
-        printf("id len too long");
+        printf("ID 's length is too long!");
         break;
 
     case SHOULD_EQUAL:
-        printf("there should be =");
+        printf("There should be =");
         break;
 
     case SHOULD_BE_NUM:
-        printf("there should be number!");
-    
+        printf("There should be number!");
+        break;
+
+    case CANNOT_IDENTIFY:
+        printf("This word can't be identifid!");
+        break;
+
     default:
         break;
     }
