@@ -25,10 +25,12 @@ enum symbol
 
 enum error_code
 {
+    NO_P,
     ID_LEN_TOO_MAX,
     SHOULD_EQUAL,
     CANNOT_IDENTIFY,
-    SHOULD_BE_NUM
+    SHOULD_BE_NUM,
+
 };
 
 const int ID_MAXLEN = 10; //标识符的最大长度
@@ -87,12 +89,12 @@ void getch()
 
 int getSym() //每次得到一个符号 二元组
 {
+    if(ch=='\0') getch();
     if (ch == EOF)
         return 0;
     //忽略空格 回车 换行 tab
     while (ch == ' ' || ch == '\r' || ch == '\n' || ch == '\t')
         getch();
-    //这会不会是EOF...
 
     if (isalpha(ch)) //标识符或者关键字
     {
@@ -100,7 +102,6 @@ int getSym() //每次得到一个符号 二元组
         int i = 0;
         while (isalnum(ch))
         {
-            // liangtodo 没有限制大小 error
             id[i++] = ch;
             getch();
 
@@ -127,10 +128,8 @@ int getSym() //每次得到一个符号 二元组
         }
         //返回
         printf("(%2d,'%s')\n", sym, id);
-
-        //现在的ch是下一个单词的开头了
     }
-    else if (isdigit(ch)) //如果是数字
+    else if (isdigit(ch)) //如果是数字 整数
     {
         sym = number;
         num = 0;
@@ -228,7 +227,9 @@ int main()
     fp = fopen("source.txt", "r");
 
     printf("------------lexer begin!------------\n");
+
     lexer(fp);
+
     printf("------------lexer over!------------\n");
 
     fclose(fp);
@@ -254,6 +255,9 @@ void error(int i)
 
     switch (i)
     {
+    case NO_P:
+        printf("no p");
+        break;
     case ID_LEN_TOO_MAX:
         printf("ID 's length is too long!");
         break;

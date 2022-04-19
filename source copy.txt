@@ -1,0 +1,13 @@
+var q, n, r, q;
+q:=1000;
+
+procedure gcd;
+    begin
+        while r#0  do 
+             begin
+                q := m / n;
+                r := m - q * n;
+                m := n;
+                n := r;
+             end
+   end;
