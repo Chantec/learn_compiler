@@ -1,8 +1,5 @@
 #include "lexer.cpp"
 
-
-
-
 //****** 语法分析阶段 ******//
 void Block();
 void ConstDeclaration();
@@ -13,19 +10,24 @@ void Expression();
 void Term();
 void Factor();
 
-#define ERR(str) printf("%s\n",str);exit(0);
-
-
 int main()
 {
-    fp = fopen("source.txt", "r");
+    fp = fopen("s1.txt", "r");
+    if(fp==0)
+    {
+        errors("no file");
+    }
 
 
     getSym();
     Block();
     if(sym!=period)
     {
-        error(0);//todo 缺少.
+       errors("should be .");
+    }
+    else 
+    {
+        printf("语法分析通过!");
     }
 
     fclose(fp);
@@ -51,6 +53,10 @@ void Block()
             {
                 getSym();
             }
+            else 
+            {
+                errors("should be ; here");
+            }
 
         }
         else if(sym==varsym)
@@ -70,7 +76,7 @@ void Block()
             }
             else 
             {
-                ERR("bug");
+                errors("should be ; here");
                 //应该是分号
             }
         }
@@ -82,10 +88,18 @@ void Block()
                 //将其注册
                 getSym();
             }
+            else 
+            {
+                errors("should be id here");
+            }
 
             if(sym==semicolon)//分号
             {
                 getSym();
+            }
+            else 
+            {
+                errors("should be ; here");
             }
 
 
@@ -95,6 +109,10 @@ void Block()
             {
                 getSym();
             }
+            else 
+            {
+                errors("should be ; here");
+            }
         }
         else 
         {
@@ -103,9 +121,6 @@ void Block()
 
         Statement();
     }
-    
-
-
 }
 
 void ConstDeclaration()
@@ -124,19 +139,17 @@ void ConstDeclaration()
             }
             else 
             {
-
+                errors("shold be number here");
             }
         }
         else 
         {
-
+            errors("should be =");
         }
-        
-        
     }
     else 
     {
-
+        errors("should be id");
     }
 
     
@@ -151,7 +164,8 @@ void VarDeclaration()
     }
     else 
     {
-        //error
+        //errorsor
+        errors("should be id");
     }
 }
 
@@ -159,8 +173,10 @@ void Statement()
 {
     if(sym==ident)
     {
-        getSym();//:=
-        getSym();//to_expression
+        getSym();//
+        if(sym!=becomes)
+            errors("should be :=");
+        getSym();//to expression
         Expression();
     }
     else if(sym==ifsym)
@@ -176,6 +192,7 @@ void Statement()
         else 
         {
             //should be then
+            errors("should be then");
         }
         
     }
@@ -192,6 +209,7 @@ void Statement()
         else 
         {
             //should be do
+            errors("should be do ");
         }
     }
     else if(sym==callsym)
@@ -205,6 +223,7 @@ void Statement()
         else 
         {
             //should be ident
+            errors("should be id");
         }
     }
     else if(sym==readsym)
@@ -231,6 +250,7 @@ void Statement()
         else 
         {
             //should be end
+            errors("should be end");
         }
 
     }
@@ -258,6 +278,7 @@ void Condition()
         else 
         {
             //should be = #
+            errors("should be fuhao");
         }
     }
     
@@ -307,7 +328,12 @@ void Factor()
         else 
         {
             //should be )
+            errors("should be )");
         }
+    }
+    else 
+    {
+        errors("factor error should be id or num or (");
     }
 }
 
